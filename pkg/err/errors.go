@@ -1,6 +1,13 @@
 package errs
 
-import "errors"
+import (
+	"context"
+	"errors"
+	"log/slog"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+)
 
 var (
 	// Client / Request Errors
@@ -43,3 +50,48 @@ var (
 	// ErrNotImplemented is returned when an operation is not supported.
 	ErrNotImplemented = errors.New("not implemented")
 )
+
+func ToGRPCStatusError(ctx context.Context, err error, logger *slog.Logger, msg string) error {
+	if err == nil {
+		return nil
+	}
+	if _, ok := status.FromError(err); ok {
+		return err
+	}
+
+	switch {
+	case errors.Is(err, ErrNotFound):
+		logger.ErrorContext(ctx, "not found", slog.String("msg", msg), slog.Any("error", err))
+		return status.Error(codes.NotFound, err.Error())
+	case errors.Is(err, ErrAlreadyExists):
+		logger.ErrorContext(ctx, "already exists", slog.String("msg", msg), slog.Any("error", err))
+		return status.Error(codes.AlreadyExists, err.Error())
+		// case errors.Is(err, ErrAborted):
+		// logger.ErrorContext(ctx, "internal server error", slog.String("msg", msg), slog.Any("error", err))
+	// 	return status.Error(codes.Aborted, err.Error())
+	case errors.Is(err, ErrInvalidArgument):
+		logger.ErrorContext(ctx, "invalid arguement", slog.String("msg", msg), slog.Any("error", err))
+		return status.Error(codes.InvalidArgument, err.Error())
+	case errors.Is(err, ErrUnauthorized):
+		logger.ErrorContext(ctx, "unauthorized", slog.String("msg", msg), slog.Any("error", err))
+		return status.Error(codes.PermissionDenied, err.Error())
+	// case errors.Is(err, ErrForbidden):
+	// logger.ErrorContext(ctx, "internal server error", slog.String("msg", msg), slog.Any("error", err))
+	// 	return status.Error(codes., err.Error())
+	case errors.Is(err, ErrRateLimited):
+		logger.ErrorContext(ctx, "rate limited", slog.String("msg", msg), slog.Any("error", err))
+		return status.Error(codes.ResourceExhausted, err.Error())
+
+	case errors.Is(err, ErrUnavailable):
+		logger.ErrorContext(ctx, "unavailable", slog.String("msg", msg), slog.Any("error", err))
+		return status.Error(codes.Unavailable, err.Error())
+
+	case errors.Is(err, ErrTimeout):
+		logger.ErrorContext(ctx, "timeout", slog.String("msg", msg), slog.Any("error", err))
+		return status.Error(codes.DeadlineExceeded, err.Error())
+
+	default:
+		logger.ErrorContext(ctx, "internal server error", slog.String("msg", msg), slog.Any("error", err))
+		return status.Error(codes.Unknown, "internal server error")
+	}
+}
