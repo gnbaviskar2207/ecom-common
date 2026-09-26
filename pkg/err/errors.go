@@ -92,6 +92,6 @@ func ToGRPCStatusError(ctx context.Context, err error, logger *slog.Logger, msg 
 
 	default:
 		logger.ErrorContext(ctx, "internal server error", slog.String("msg", msg), slog.Any("error", err))
-		return status.Error(codes.Unknown, "internal server error")
+		return status.Error(codes.Internal, "internal server error")
 	}
 }
