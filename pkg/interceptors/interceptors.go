@@ -12,6 +12,19 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+func RequestLoggerInterceptor(logger *slog.Logger) grpc.UnaryServerInterceptor {
+	return func(
+		ctx context.Context,
+		req any,
+		info *grpc.UnaryServerInfo,
+		handler grpc.UnaryHandler,
+	) (resp any, err error) {
+		logger.DebugContext(ctx, "request received", slog.String("method", info.FullMethod), slog.Any("request", req))
+		resp, err = handler(ctx, req)
+		return resp, err
+	}
+}
+
 func ErrorInterceptor(logger *slog.Logger) grpc.UnaryServerInterceptor {
 	return func(
 		ctx context.Context,
@@ -42,7 +55,7 @@ func RecoveryInterceptor(logger *slog.Logger) grpc.UnaryServerInterceptor {
 	) (resp any, err error) {
 		defer func() {
 			if r := recover(); r != nil {
-				logger.ErrorContext(ctx, "panic caught by interceptor",
+				logger.ErrorContext(ctx, "grpc unary handler recorved from panic",
 					slog.String("method", info.FullMethod),
 					slog.Any("panic", r),
 					slog.String("stack", string(debug.Stack())),
