@@ -29,8 +29,5 @@ type MongoConfig struct {
 }
 
 type CommonConfig struct {
-	Environment string      `yaml:"environment" env:"APP_ENV" env-default:"development"`
-	MongoConfig MongoConfig `yaml:"mongo"`
-	GRPCConfig  GRPCConfig  `yaml:"grpc"`
-	HTTPConfig  HTTPConfig  `yaml:"http"`
+	Environment string `yaml:"environment" env:"APP_ENV" env-default:"development"`
 }
