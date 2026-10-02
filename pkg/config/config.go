@@ -29,5 +29,7 @@ type MongoConfig struct {
 }
 
 type CommonConfig struct {
-	Environment string `yaml:"environment" env:"APP_ENV" env-default:"development"`
+	Environment    string `yaml:"environment" env:"APP_ENV" env-default:"development"`
+	ServiceName    string `yaml:"service_name" env:"APP_SERVICE_NAME" env-default:""`
+	ServiceVersion string `yaml:"service_version" env:"APP_SERVICE_VERSION" env-default:""`
 }
